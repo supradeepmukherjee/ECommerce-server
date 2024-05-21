@@ -30,7 +30,7 @@ const checkout = tryCatch(async (req, res, next) => {
     res.status(201).json({ success: true, order: paymentOrder, createdOrder })
 })
 
-const verifyPayment = tryCatch(async (req, res) => {
+const verifyPayment = tryCatch(async (req, res, next) => {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body
     const body = `${razorpay_order_id}|${razorpay_payment_id}`
     const expectedSignature =

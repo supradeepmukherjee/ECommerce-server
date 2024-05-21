@@ -4,7 +4,7 @@ import { tryCatch } from "../middlewares/error.js"
 import { ErrorHandler } from "../utils/utility.js"
 import { delCloudinaryFiles, uploadToCloudinary } from '../utils/cloudinary.js'
 
-const createProduct = tryCatch(async (req, res) => { //admin
+const createProduct = tryCatch(async (req, res, next) => { //admin
     const { name, price, description, category, stock } = req.body
     const files = req.files || []
     if (files.length < 1) return next(new ErrorHandler(400, 'Please provide attachments'))
@@ -33,12 +33,12 @@ const createProduct = tryCatch(async (req, res) => { //admin
     res.status(201).json({ product, success: true, msg: 'Product Created Successfully' })
 })
 
-const getAllProducts = tryCatch(async (req, res) => {
+const getAllProducts = tryCatch(async (req, res, next) => {
     const products = await Product.find({ user: req.user._id })
     res.status(200).json({ products, success: true })
 })
 
-const getProducts = tryCatch(async (req, res) => {
+const getProducts = tryCatch(async (req, res, next) => {
     const { page, keyword, price, category, rating } = req.query
     const resultPerPage = 5
     const skip = resultPerPage * (page - 1)
@@ -79,13 +79,13 @@ const getProducts = tryCatch(async (req, res) => {
     res.status(200).json({ products, productCount, filteredProductsCount: products.length, resultPerPage, success: true })
 })
 
-const productDetails = tryCatch(async (req, res) => {
+const productDetails = tryCatch(async (req, res, next) => {
     let product = await Product.findById(req.params.id)
     if (!product) return next(new ErrorHandler(404, 'Product not found'))
     res.status(200).json({ product, success: true })
 })
 
-const updateProduct = tryCatch(async (req, res) => { //admin
+const updateProduct = tryCatch(async (req, res, next) => { //admin
     const { name, price, description, category, stock } = req.body
     const files = req.files || []
     if (files.length < 1) return next(new ErrorHandler(400, 'Please provide attachments'))
@@ -116,7 +116,7 @@ const updateProduct = tryCatch(async (req, res) => { //admin
     res.status(200).json({ product, success: true, msg: 'Product Updated Successfully' })
 })
 
-const delProduct = tryCatch(async (req, res) => { //admin
+const delProduct = tryCatch(async (req, res, next) => { //admin
     const product = await Product.findById(req.params.id)
     if (!product) return next(new ErrorHandler(404, 'Product not found'))
     for (let i = 0; i < product.images.length; i++) await cloudinary.v2.uploader.destroy(product.images[i].public_id)
@@ -124,7 +124,7 @@ const delProduct = tryCatch(async (req, res) => { //admin
     res.status(200).json({ msg: 'Product deleted successfully', success: true })
 })
 
-const review = tryCatch(async (req, res) => {
+const review = tryCatch(async (req, res, next) => {
     const { _id, name } = req.user
     const { rating, comment, productID } = req.body
     const review = {
@@ -153,7 +153,7 @@ const review = tryCatch(async (req, res) => {
     res.status(200).json({ product, success: true })
 })
 
-const delReview = tryCatch(async (req, res) => {
+const delReview = tryCatch(async (req, res, next) => {
     const { productID } = req.query
     const product = await Product.findById(productID)
     if (!product) return next(new ErrorHandler(404, 'Product not found'))

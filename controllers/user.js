@@ -8,7 +8,7 @@ import sendToken from '../utils/jwtToken.js'
 import sendEmail from '../utils/sendEmail.js'
 import { ErrorHandler } from "../utils/utility.js"
 
-const register = tryCatch(async (req, res) => {
+const register = tryCatch(async (req, res, next) => {
     const { name, email, password } = req.body
     const file = req.file
     let user = await User.findOne({ email })
@@ -40,12 +40,18 @@ const login = tryCatch(async (req, res, next) => {
     if (!user) return next(new ErrorHandler(401, 'Email or Password is incorrect'))
     const passwordMatched = await user.comparePassword(password)
     if (!passwordMatched) return next(new ErrorHandler(401, 'Email or Password is incorrect'))
-    sendToken(user, 201, res)
+    sendToken(user, 201, res, `Welcome back, ${user.name}`)
 })
 
-const logout = tryCatch(async (req, res) => res.status(200).cookie('token', null, { expires: new Date(Date.now()), httpOnly: true }).json({ success: true, msg: 'Logged Out' }))
+const logout = tryCatch(async (req, res, next) =>
+    res.status(200).cookie('token', null, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+        maxAge: 0,
+    }).json({ success: true, msg: 'Logged Out' }))
 
-const forgotPassword = tryCatch(async (req, res) => {
+const forgotPassword = tryCatch(async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email })
     if (!user) return next(new ErrorHandler(404, 'Email ID not registered'))
     const token = await user.generateResetPasswordToken()
@@ -64,7 +70,7 @@ const forgotPassword = tryCatch(async (req, res) => {
     }
 })
 
-const resetPassword = tryCatch(async (req, res) => {
+const resetPassword = tryCatch(async (req, res, next) => {
     const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
     const user = await User.findOne({
         resetPasswordToken,
@@ -79,13 +85,13 @@ const resetPassword = tryCatch(async (req, res) => {
     res.status(200).json({ success: true, msg: 'Password updated successfully' })
 })
 
-const userDetails = tryCatch(async (req, res) => {
+const userDetails = tryCatch(async (req, res, next) => {
     const user = await User.findById(req.user._id)
     if (!user) return next(new ErrorHandler(404, 'User not found'))
     res.status(200).json({ success: true, user })
 })
 
-const updatePassword = tryCatch(async (req, res) => {
+const updatePassword = tryCatch(async (req, res, next) => {
     const user = await User.findById(req.user._id).select('+password')
     const { old, newP, cPass } = req.body
     const isMatch = await user.comparePassword(old)
@@ -96,7 +102,7 @@ const updatePassword = tryCatch(async (req, res) => {
     res.status(200).json({ success: true, msg: 'Password changed successfully' })
 })
 
-const updateProfile = tryCatch(async (req, res) => {
+const updateProfile = tryCatch(async (req, res, next) => {
     const user = await User.findById(req.user._id)
     if (!user) return next(new ErrorHandler(404, 'User not found'))
     const { name, email } = req.body
@@ -113,18 +119,18 @@ const updateProfile = tryCatch(async (req, res) => {
     res.status(200).json({ success: true, user, msg: "Profile Updated" })
 })
 
-const allUsers = tryCatch(async (req, res) => { // admin
+const allUsers = tryCatch(async (req, res, next) => { // admin
     const users = await User.find()
     res.status(200).json({ success: true, users })
 })
 
-const viewUser = tryCatch(async (req, res) => { // admin
+const viewUser = tryCatch(async (req, res, next) => { // admin
     const user = await User.findById(req.params.id)
     if (!user) return next(new ErrorHandler(404, "User doesn\'t exist"))
     res.status(200).json({ success: true, user })
 })
 
-const updateRole = tryCatch(async (req, res) => { // admin
+const updateRole = tryCatch(async (req, res, next) => { // admin
     const user = await User.findByIdAndUpdate(req.params.id, { role: req.body.role }, {
         new: true,
         runValidators: true
@@ -133,7 +139,7 @@ const updateRole = tryCatch(async (req, res) => { // admin
     res.status(200).json({ success: true, user })
 })
 
-const addItemToCart = tryCatch(async (req, res) => {
+const addItemToCart = tryCatch(async (req, res, next) => {
     const { id, qty } = req.body
     let exists = -1
     const user = await User.findById(req.user._id)
@@ -152,7 +158,7 @@ const addItemToCart = tryCatch(async (req, res) => {
     }
 })
 
-const cartItems = tryCatch(async (req, res) => {
+const cartItems = tryCatch(async (req, res, next) => {
     const user = await User.findById(req.user._id)
     if (!user) return next(new ErrorHandler(404, "User doesn\'t exist"))
     const items = []
@@ -163,7 +169,7 @@ const cartItems = tryCatch(async (req, res) => {
     res.status(200).json({ success: true, items })
 })
 
-const removeItem = tryCatch(async (req, res) => {
+const removeItem = tryCatch(async (req, res, next) => {
     const user = await User.findById(req.user._id)
     if (!user) return next(new ErrorHandler(404, "User doesn\'t exist"))
     const itemID = req.params.id
@@ -173,13 +179,13 @@ const removeItem = tryCatch(async (req, res) => {
     res.status(200).json({ success: true, user, msg: 'Item removed from cart' })
 })
 
-const getShipInfo = tryCatch(async (req, res) => {
+const getShipInfo = tryCatch(async (req, res, next) => {
     const user = await User.findById(req.user._id)
     if (!user) return next(new ErrorHandler(404, "User doesn\'t exist"))
     res.status(200).json({ success: true, shipInfo: user.shippingInfo })
 })
 
-const updateShip = tryCatch(async (req, res) => {
+const updateShip = tryCatch(async (req, res, next) => {
     const user = await User.findById(req.user._id)
     if (!user) return next(new ErrorHandler(404, "User doesn\'t exist"))
     const { address, city, state, country, pincode, phone } = req.body

@@ -7,7 +7,6 @@ const userSchema = new Schema({
     name: {
         type: String,
         required: [true, 'Name cant be blank'],
-        minLength: [5, 'Name must be of minimum 5 characters']
     },
     email: {
         type: String,
