@@ -42,11 +42,16 @@ const updateOrderStatus = tryCatch(async (req, res, next) => { // admin
         await product.save()
     }
     order.orderStatus = req.body.status
+    const user = await User.findById(order.user)
     if (req.body.status === 'Delivered') {
         order.orderedItems.forEach(async item => await updateStock(item.product, item.qty))
         order.deliveredAt = Date.now()
+        for (let i = 0; i < order.orderedItems.length; i++) {
+            const product = order.orderedItems.product[i]
+            if (!user.productsDelivered.includes(product)) user.productsDelivered.push(product)
+        }
     }
-    await order.save()
+    await Promise.all([order.save(), user.save()])
     res.status(200).json({ success: true, msg: 'Order status updated' })
 })
 

@@ -63,6 +63,10 @@ const userSchema = new Schema({
             minLength: [10, "Pincode must be of 10 digits"]
         }
     },
+    productsDelivered: [{
+        type: Types.ObjectId,
+        ref: 'Product'
+    }],
     resetPasswordToken: String,
     resetPasswordExpire: Date
 })

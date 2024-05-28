@@ -29,7 +29,8 @@ const register = tryCatch(async (req, res, next) => {
             country: '',
             pincode: '000000',
             phone: '0000000000'
-        }
+        },
+        productsDelivered: []
     })
     sendToken(user, 201, res, 'Registered Successfully')
 })
