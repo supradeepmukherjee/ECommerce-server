@@ -42,23 +42,23 @@ const getProducts = tryCatch(async (req, res, next) => {
     const { page, keyword, price, category, rating } = req.query
     const resultPerPage = 5
     const skip = resultPerPage * (page - 1)
-    const productCount = await Product.countDocuments()
-    let products = await Product.find({
-        name: {
-            $regex: keyword,
-            $options: 'i'
-        },
-        price: {
-            $gte: price.gte,
-            $lte: price.lte
-        }, rating: {
-            $gte: rating
-        }
-    })
-        .skip(skip)
-        .limit(resultPerPage)
-
-    if (category)
+    let products = []
+    let productCount = 0
+    if (category) {
+        productCount = await Product.countDocuments({
+            name: {
+                $regex: keyword,
+                $options: 'i'
+            },
+            price: {
+                $gte: price.gte,
+                $lte: price.lte
+            },
+            category,
+            rating: {
+                $gte: rating
+            }
+        })
         products = await Product.find({
             name: {
                 $regex: keyword,
@@ -75,8 +75,37 @@ const getProducts = tryCatch(async (req, res, next) => {
         })
             .skip(skip)
             .limit(resultPerPage)
-
-    res.status(200).json({ products, productCount, filteredProductsCount: products.length, resultPerPage, success: true })
+    }
+    else {
+        productCount = await Product.countDocuments({
+            name: {
+                $regex: keyword,
+                $options: 'i'
+            },
+            price: {
+                $gte: price.gte,
+                $lte: price.lte
+            }, rating: {
+                $gte: rating
+            }
+        })
+        products = await Product.find({
+            name: {
+                $regex: keyword,
+                $options: 'i'
+            },
+            price: {
+                $gte: price.gte,
+                $lte: price.lte
+            },
+            rating: {
+                $gte: rating
+            }
+        })
+            .skip(skip)
+            .limit(resultPerPage)
+    }
+    res.status(200).json({ products, productCount, resultPerPage, success: true })
 })
 
 const productDetails = tryCatch(async (req, res, next) => {
