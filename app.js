@@ -13,17 +13,12 @@ const app = express()
 
 if (process.env.NODE_ENV !== 'production') config({ path: 'config/config.env' })
 
+console.log(process.env.CLIENT_URL)
+
 app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'http://localhost:4173',
-        'http://localhost:3000',
-        'http://127.0.0.1:5173',
-        'http://127.0.0.1:5173',
-        'http://127.0.0.1:3000',
-        process.env.CLIENT_URL
-    ],
-    credentials: true
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
 }))
 app.use(json({ limit: '50mb' }))
 app.use(cookieParser())
